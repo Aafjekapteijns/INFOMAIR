@@ -1,0 +1,5 @@
+dialog_acts.dat
+.env
+__pycache__
+.idea
+.DS_store

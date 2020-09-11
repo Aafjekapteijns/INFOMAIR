@@ -1,0 +1,20 @@
+{
+  "rules": {
+      "ack": ["um", "okay"],
+      "affirm": ["yes", "right"],
+      "bye": ["see", "good", "bye"],
+      "confirm": ["is"],
+      "deny": ["not"],
+      "hello": ["hello","hi"],
+      "inform": ["looking"],
+      "negate": ["no"],
+      "null": ["cough", "silence"],
+      "repeat": ["repeat","again"],
+      "eqalts": ["another","different"],
+      "reqmore": ["more"],
+      "request": ["what","where","when"],
+      "restart": ["restart","start"],
+      "thankyou": ["thank","thanks"]
+    }
+}
+
