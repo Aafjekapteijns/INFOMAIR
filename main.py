@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 from utils import split_data
-from baselines import  BaselineRuleBased
+from baselines import BaselineRuleBased
 
 # Loading the data for the dialog acts and utterance contents
 dialog_acts = open("dialog_acts.dat", 'r')
@@ -22,6 +22,15 @@ print(dialog_acts)
 
 X_train, X_test, y_train, y_test = split_data(dialog_acts)
 
-baseline_2 = BaselineRuleBased()
+baseline_2 = BaselineRuleBased(y_train)
 
-print(baseline_2.get_classification(y_train[6]))
+if __name__ == '__main__':
+
+    while True:
+        print('type an utterance or exit to exit')
+        input_text = str(input())
+        if input_text == 'exit':
+            break
+        else:
+            print(input_text)
+            print(baseline_2.get_classification(input_text))
