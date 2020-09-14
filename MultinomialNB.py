@@ -1,8 +1,9 @@
 from sklearn.naive_bayes import MultinomialNB
+from sklearn import metrics
 mnb = MultinomialNB()
-X_train_num = BagOfWords(X_train)
-X_test_num = BagOfWords(X_test)
+freq = get_word_freq(X_train)
+X_train_num = get_bow(X_train, freq)
+X_test_num = get_bow(X_test, freq)
 y_pred = mnb.fit(X_train_num, y_train.ravel()).predict(X_test_num)
-print(len(y_test))
-print(len(y_pred))
-print((y_test.ravel() != y_pred).sum())
+report = metrics.classification_report(y_test.ravel(), y_pred)
+print(report)
