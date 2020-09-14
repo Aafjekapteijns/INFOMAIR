@@ -9,7 +9,7 @@ class BaselineBasic:
             data.append(data_y[i][0])
         self.most_repeated = max(data, key=data.count)
 
-    def get_classification(self):
+    def predict(self):
         return self.most_repeated
 
 
@@ -20,11 +20,11 @@ class BaselineRuleBased:
             self.rules = json.load(json_file).get('rules')
             if data_y is not None:
                 bb = BaselineBasic(data_y)
-                self.base_case = bb.get_classification()
+                self.base_case = bb.predict()
             else:
                 self.base_case = None
 
-    def get_classification(self, data_x):
+    def predict(self, data_x):
         data_x = data_x.split()
         print(data_x)
         for i in range(len(data_x)):
