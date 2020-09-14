@@ -1,19 +1,19 @@
 {
   "rules": {
-      "ack": ["um", "okay"],
-      "affirm": ["yes", "right"],
+      "ack": ["um", "okay", "kay", "fine"],
+      "affirm": ["yes", "right", "yeah", "correct", "perfect"],
       "bye": ["see", "good", "bye"],
-      "confirm": ["is"],
-      "deny": ["not"],
+      "confirm": ["is", "does"],
+      "deny": ["not", "wrong", ],
       "hello": ["hello","hi"],
-      "inform": ["looking"],
+      "inform": ["looking", "west", "south", "north", "cheap", "expensive"],
       "negate": ["no"],
-      "null": ["cough", "silence"],
-      "repeat": ["repeat","again"],
-      "eqalts": ["another","different"],
+      "null": ["cough", "silence", "background-speech", "noise"],
+      "repeat": ["repeat","again", "back"],
+      "reqalts": ["another","different", "about"],
       "reqmore": ["more"],
-      "request": ["what","where","when"],
-      "restart": ["restart","start"],
+      "request": ["what","where","when", "address"],
+      "restart": ["restart","start", "reset"],
       "thankyou": ["thank","thanks"]
     }
 }
