@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     while True:
         print('type an utterance or exit to exit')
-        input_text = str(input())
+        input_text = str(input()).lower()
         if input_text == 'exit':
             break
         else:
