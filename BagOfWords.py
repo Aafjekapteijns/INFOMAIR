@@ -1,5 +1,6 @@
 import nltk
 import heapq
+import numpy as np
 
 
 def get_word_freq(contents):
@@ -29,3 +30,14 @@ def get_bow(contents, most_freq):
         content_vectors.append(sent_vec)
 
     return content_vectors
+
+
+def get_bow_unpacked(contents, most_freq):
+    content_vectors = np.zeros(len(most_freq))
+    for content in contents:
+        content_tokens = nltk.word_tokenize(content)
+        for i in range(len(most_freq)):
+            if most_freq[i] in content_tokens:
+                content_vectors[i] = 1
+
+    return [content_vectors]

@@ -4,7 +4,7 @@
       "affirm": ["yes", "right", "yeah", "correct", "perfect"],
       "bye": ["see", "good", "bye"],
       "confirm": ["is", "does"],
-      "deny": ["not", "wrong", ],
+      "deny": ["not", "wrong" ],
       "hello": ["hello","hi"],
       "inform": ["looking", "west", "south", "north", "cheap", "expensive"],
       "negate": ["no"],
