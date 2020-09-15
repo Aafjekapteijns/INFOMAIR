@@ -119,14 +119,12 @@ if __name__ == '__main__':
     ds = DialogSystem('restaurants_info.csv', sktree, frequent_words)
 
     while True:
-        print('type an utterance or exit to exit')
+        ds.get_message()
         input_text = str(input()).lower()
         if input_text == 'exit':
             break
         else:
-            df, intent = ds.process_sentence(input_text)
+            intent = ds.process_sentence(input_text)
             print(intent)
-            with pd.option_context('display.max_rows', None, 'display.max_columns',
-                                   None):  # more options can be specified also
-                print(df)
+
 

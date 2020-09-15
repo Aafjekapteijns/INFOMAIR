@@ -5,9 +5,10 @@ from BagOfWords import get_bow_unpacked
 class DialogSystem:
 
     def __init__(self, restaurant_data, ml_model, frequent_words):
-        self.state = "welcome"
+        self.state = WelcomeState()
         self.data = pd.read_csv(restaurant_data)
         self.ml_model = ml_model
+        self.entities = {}
         self.entities_options = self.__get_unique_entities(self.data)
         self.frequent_words = frequent_words
 
@@ -55,11 +56,81 @@ class DialogSystem:
         sentence = sentence.split(' ')
         intent = self.__get_intent(sentence)
         entities = self.__get_entities(sentence)
-        df = self.__get_restaurants(pricerange=entities.get('pricerange', None),
-                                    area=entities.get('area', None),
-                                    food=entities.get('food', None),
-                                    postcode=entities.get('postcode', None))
+        if entities != {}:
+            self.entities = self.state.assure_entities(entities)
+            df = self.__get_restaurants(pricerange=self.entities.get('pricerange', None),
+                                        area=self.entities.get('area', None),
+                                        food=self.entities.get('food', None),
+                                        postcode=self.entities.get('postcode', None))
+            with pd.option_context('display.max_rows', None, 'display.max_columns',
+                                   None):  # more options can be specified also
+                print(df)
+        self.__transition(self.state.get_next_state(intent))
 
-        return df, intent
+        return intent
+
+    def get_message(self):
+        self.state.print_message()
 
 
+class State:
+    states_dict: {}
+    message: str
+
+    def get_next_state(self, intent):
+        next_state = None
+        for key, val in self.states_dict.items():
+            if intent in val:
+                next_state = key
+
+        if next_state == 'Preferences':
+            return Preferences()
+        else:
+            return Repeat()
+
+    def assure_entities(self, entities):
+        assured_entities = {}
+        print(entities)
+        for category, entity in entities.items():
+            if category == 'pricerange':
+                print('You want a ' + str(entity) + ' restaurant?')
+                if input() == 'yes':
+                    assured_entities[category] = entity
+            if category == 'area':
+                print('You want a restaurant in ' + str(entity) + ' area?')
+                if input() == 'yes':
+                    assured_entities[category] = entity
+
+            if category == 'food':
+                print('You want a ' + str(entity) + ' restaurant?')
+                if input() == 'yes':
+                    assured_entities[category] = entity
+
+            if category == 'postcode':
+                print('You want a restaurant in ' + str(entity) + ' postcode?')
+                if input() == 'yes':
+                    assured_entities[category] = entity
+        return assured_entities
+
+    def print_message(self):
+        print(self.message)
+
+
+class WelcomeState(State):
+
+    def __init__(self):
+        self.states_dict = {'Preferences': ['inform', 'hello'], 'repeat': []}
+        self.message = 'Hello, how can I help you?'
+
+
+class Preferences(State):
+
+    def __init__(self):
+        self.states_dict = {'Preferences': ['inform'], 'repeat': []}
+        self.message = 'Can you tell me what you are looking for?'
+
+
+class Repeat(State):
+    def __init__(self):
+        self.states_dict = {'Preferences': ['inform'], 'repeat': []}
+        self.message = 'Can you repeat?'
