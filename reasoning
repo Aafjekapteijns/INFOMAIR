@@ -1,0 +1,26 @@
+def reasoning(list):
+  list_update = list
+  list_copy = []
+  while list_update != list_copy:
+    list_copy = list_update.copy()
+    if 'spanish' in list and 'long time' not in list:
+      list_update.append('long time')
+    if 'cheap' in list and 'not romantic' not in list:
+      list_update.append('not romantic')
+    if 'expensive' in list and 'romantic' not in list:
+      list_update.append('romantic')
+    if 'expensive' in list and 'good food' not in list:
+      list_update.append('good food')
+    if 'centre' in list and 'busy' not in list:
+      list_update.append('busy')
+    if 'busy' in list and 'late' not in list:
+      list_update.append('late')
+    if 'long time' in list and 'late' not in list:
+      list_update.append('late')
+    if 'cheap' in list and 'good food' in list and 'busy' not in list:
+      list_update.append('busy')
+    if 'gastropub' in list and 'not children' not in list:
+      list_update.append('not children')
+  return list_update
+
+print(reasoning(['cheap', 'expensive']))
