@@ -56,7 +56,7 @@ def get_word_freq(contents):
                 wordfreq[token] = 1
             else:
                 wordfreq[token] += 1
-    most_freq = heapq.nlargest(200, wordfreq, key=wordfreq.get)
+    most_freq = heapq.nlargest(700, wordfreq, key=wordfreq.get)
 
     return most_freq
 
