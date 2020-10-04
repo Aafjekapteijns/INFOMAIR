@@ -1,3 +1,5 @@
+import pandas as pd
+
 def update(list_update, attr, new_weight):
     """This function updates the confidence weight of an attribute, or adds it to the list if it is new"""
     name_list = [pair[0] for pair in list_update]
@@ -9,7 +11,7 @@ def update(list_update, attr, new_weight):
     return list_update
 
 
-def inference(list, goal):
+def inference(list):
     """This function iteratively applies inference rules to the list of attributes until it has found all consequences"""
 
     list_update = [[attr, 1] for attr in list]
@@ -47,31 +49,57 @@ def inference(list, goal):
             list_update = update(list_update, 'busy', 0.75)
         if 'gastropub' in attr_list:
             list_update = update(list_update, 'children', -0.85)
+    return list_update
 
-    def goaltext(goal):
-        """This function assigns specific text to certain properties so it can be presented to the user"""
-        if goal == 'long time':
-            return 'suitable for spending a long time'
-        elif goal == 'good food':
-            return 'serving good food'
-        elif goal == 'late':
-            return 'open until late'
-        elif goal == 'children':
-            return 'suitable for children'
-        else: return goal
+def goaltext(goal):
+    """This function assigns specific text to certain properties so it can be presented to the user"""
+    if goal == 'long time':
+        return 'suitable for spending a long time'
+    elif goal == 'large groups':
+        return 'suitable for large groups'
+    elif goal == 'late':
+        return 'open until late'
+    elif goal == 'children':
+        return 'suitable for children'
+    else: return goal
 
-    if goal in attr_list:
-        goal_score = list_update[attr_list.index(goal)][1]
-        if goal_score > 0.5:
-            print('This restaurant is probably', goaltext(goal))
-        elif goal_score > 0:
-            print('This restaurant might be', goaltext(goal))
-        elif goal_score < -0.5:
-            print('This restaurant is probably not', goaltext(goal))
-        elif goal_score < 0:
-            print('This restaurant might not be', goaltext(goal))
-    else:
-        print('I do not know whether this restaurant is', goaltext(goal))
+'''if goal in attr_list:
+    goal_score = list_update[attr_list.index(goal)][1]
+    if goal_score > 0.5:
+        print('This restaurant is probably', goaltext(goal))
+    elif goal_score > 0:
+        print('This restaurant might be', goaltext(goal))
+    elif goal_score < -0.5:
+        print('This restaurant is probably not', goaltext(goal))
+    elif goal_score < 0:
+        print('This restaurant might not be', goaltext(goal))
+else:
+    print('I do not know whether this restaurant is', goaltext(goal))
+'''
 
 
-inference(['gastropub'], 'children')
+def rest_inf():
+    rests = pd.read_csv('restaurants_info.csv')
+    rests["busy"] = 0
+    rests["long time"] = 0
+    rests["late"] = 0
+    rests["romantic"] = 0
+    rests["children"] = 0
+    rests["large groups"] = 0
+    for i in range(len(rests)):
+        attrs = rests.iloc[i, 1:4].tolist()
+        attrs_up = inference(attrs)
+        for item in attrs_up:
+            if item[0] == 'busy':
+                rests.iloc[i, 7] = item[1]
+            elif item[0] == 'long time':
+                rests.iloc[i, 8] = item[1]
+            elif item[0] == 'late':
+                rests.iloc[i, 9] = item[1]
+            elif item[0] == 'romantic':
+                rests.iloc[i, 10] = item[1]
+            elif item[0] == 'children':
+                rests.iloc[i, 11] = item[1]
+            elif item[0] == 'large groups':
+                rests.iloc[i, 7] = item[1]
+
