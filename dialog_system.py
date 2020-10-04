@@ -1,5 +1,6 @@
 import pandas as pd
 from utils import get_bow_unpacked
+import json
 
 
 class State:
@@ -34,9 +35,12 @@ class State:
             self.__print_dataframe(self.df, '1', self.counter)
             new_state = self
         elif next_state == 'ShowMultiple':
+            self.__print_dataframe(df, 'N')
             self.__print_dataframe(df, '1', 0)
             preferences_user['restaurantname'] = df['restaurantname'].to_numpy()[0]
             new_state = ShowMultiple(preferences_user, df)
+        elif next_state == 'Alternatives':
+            new_state = Alternatives(preferences_user)
         elif next_state == 'Welcome':
             new_state = Welcome(preferences_user)
         elif next_state == 'repeat':
@@ -49,17 +53,22 @@ class State:
                 self.__print_dataframe(df, 'P')
             elif preferences_user['request'] == 'address':
                 self.__print_dataframe(df, 'A')
-            new_state = RequestMore(preferences_user)
+            new_state = RequestMoreInfo(preferences_user)
+        elif next_state == 'ChangePreferences':
+            if preferences_user['restaurantname'] is not None:
+                preferences_user['restaurantname'] = None
+            new_state = ChangePreferences(preferences_user)
         elif len(df) <= 1:
             if len(df) == 0:
                 print('I am sorry, we have no coincidences')
             else:
+                if preferences_user['restaurantname'] is not None:
+                    preferences_user['restaurantname'] = None
                 self.__print_dataframe(df,'N')
             new_state = ChangePreferences(preferences_user)
         elif self.tag == 'welcome' and next_state == 'Preferences':
             new_state = Preferences(preferences_user)
-        elif next_state == 'ChangePreferences':
-            new_state = ChangePreferences(preferences_user)
+
         elif next_state == 'Preferences':
             new_state = Preferences(preferences_user)
         else:
@@ -164,8 +173,9 @@ class ChangePreferences(State):
         self.states_dict = {'Preferences': ['inform', 'affirm'],
                             'Finish': ['negate'],
                             'repeat': ['null'],
-                            'RequestMore': ['request']}
-        self.message = 'Do you want to change any preference? If yes tell me, or else say no'
+                            'RequestMore': ['request'],
+                            'Alternatives': ['reqalts']}
+        self.message = 'Do you want to change any preference or alternative results? If yes tell me, or else say no'
         self.preferences = preferences_user
         self.tag = 'change_preferences'
 
@@ -193,7 +203,7 @@ class Finish(State):
         self.tag = 'finish'
 
 
-class RequestMore(State):
+class RequestMoreInfo(State):
     """This State Class is used when the user asks for the address or phone"""
     def __init__(self, preferences_user):
         self.states_dict = {'End': ['negate', 'bye'],
@@ -206,10 +216,11 @@ class RequestMore(State):
 
 class ShowMultiple(State):
     def __init__(self, preferences_user, df):
-        self.states_dict = {'ChangePreferences': ['negate', 'affirm'],
+        self.states_dict = {'ChangePreferences': ['affirm'],
                             'repeat': ['null'],
                             'ShowMultiple': ['reqmore'],
-                            'RequestMore': ['request']}
+                            'RequestMore': ['request'],
+                            'Finish': ['negate']}
         self.message = {'more': 'Here is one, type more for another option',
                         'last': 'This is the last one, do you need anything else?'}
         self.counter = 0
@@ -225,6 +236,16 @@ class ShowMultiple(State):
             print(self.message['last'])
 
 
+class Alternatives(State):
+    def __init__(self, preferences_user):
+        self.states_dict = {'ShowMultiple': ['affirm'],
+                            'repeat': ['null'],
+                            'Finish': ['negate']}
+        self.message = 'We found alternative options, do you want to see them?'
+        self.preferences = preferences_user
+        self.tag = 'alternatives'
+
+
 class DialogSystem:
     """
     This class models a complete dialog system for the restaurant chatbot, it has states to which it transitions to
@@ -232,7 +253,7 @@ class DialogSystem:
     in order to access the data base and retrive important information from the input text
     """
 
-    def __init__(self, restaurant_data: str, ml_model, frequent_words):
+    def __init__(self, restaurant_data: str, ml_model, frequent_words, similarities_file):
         self.state = Welcome({})
         self.data = pd.read_csv(restaurant_data)
         self.ml_model = ml_model
@@ -240,25 +261,53 @@ class DialogSystem:
         self.__get_unique_entities()
         self.frequent_words = frequent_words
         self.preferences = {}
+        with open(similarities_file) as json_file:
+            self.similarities = json.load(json_file)
 
     def __get_restaurants(self, restaurantname: str = None, pricerange: str = None, area: str = None,
                           food: str = None, phone: str = None, addr: str = None, postcode: str = None):
         """This function gets the restaurants available in the database with the user preferences"""
         dataframe = self.data
-        if restaurantname is not None and restaurantname != 'all':
-            dataframe = dataframe[dataframe['restaurantname'] == restaurantname]
-        if pricerange is not None and pricerange != 'all':
-            dataframe = dataframe[dataframe['pricerange'] == pricerange]
-        if area is not None and area != 'all':
-            dataframe = dataframe[dataframe['area'] == area]
-        if food is not None and food != 'all':
-            dataframe = dataframe[dataframe['food'] == food]
-        if phone is not None and phone != 'all':
-            dataframe = dataframe[dataframe['phone'] == phone]
-        if addr is not None and addr != 'all':
-            dataframe = dataframe[dataframe['addr'] == addr]
-        if postcode is not None and postcode != 'all':
-            dataframe = dataframe[dataframe['postcode'] == postcode]
+        if self.state.tag == 'alternatives':
+            if pricerange is not None and pricerange != 'all':
+                price_ranges = [pricerange]
+                for similarity in self.similarities['price']:
+                    if pricerange in similarity:
+                        for price in similarity:
+                            if price not in price_ranges:
+                                price_ranges.append(price)
+                dataframe = dataframe[dataframe['pricerange'].isin(price_ranges)]
+            if area is not None and area != 'all':
+                different_areas = [area]
+                for similarity in self.similarities['food']:
+                    if food in similarity:
+                        for different_area in similarity:
+                            if different_area not in different_areas:
+                                different_areas.append(different_area)
+                dataframe = dataframe[dataframe['area'].isin(different_areas)]
+            if food is not None and food != 'all':
+                food_types = [food]
+                for similarity in self.similarities['food']:
+                    if food in similarity:
+                        for food_type in similarity:
+                            if food_type not in food_types:
+                                food_types.append(food_type)
+                dataframe = dataframe[dataframe['food'].isin(food_types)]
+        else:
+            if restaurantname is not None and restaurantname != 'all':
+                dataframe = dataframe[dataframe['restaurantname'] == restaurantname]
+            if pricerange is not None and pricerange != 'all':
+                dataframe = dataframe[dataframe['pricerange'] == pricerange]
+            if area is not None and area != 'all':
+                dataframe = dataframe[dataframe['area'] == area]
+            if food is not None and food != 'all':
+                dataframe = dataframe[dataframe['food'] == food]
+            if phone is not None and phone != 'all':
+                dataframe = dataframe[dataframe['phone'] == phone]
+            if addr is not None and addr != 'all':
+                dataframe = dataframe[dataframe['addr'] == addr]
+            if postcode is not None and postcode != 'all':
+                dataframe = dataframe[dataframe['postcode'] == postcode]
         return dataframe
 
     def __get_unique_entities(self):

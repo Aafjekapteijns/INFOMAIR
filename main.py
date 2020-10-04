@@ -115,7 +115,7 @@ if __name__ == '__main__':
     y_pred = sktree.predict(vect_X_test)
     print_results(y_test, y_pred)
 
-    ds = DialogSystem('restaurants_info.csv', sktree, frequent_words)
+    ds = DialogSystem('restaurants_info.csv', sktree, frequent_words, 'similarities.json')
 
     while True:
         ds.get_message()
