@@ -282,7 +282,7 @@ class AddExtraFeatures(State):
     """Class created to add extra features to the search of restaurants"""
     def __init__(self, preferences_user):
         self.states_dict = {'ShowMultiple': ['affirm', 'negate', 'inform', 'null']}
-        self.message = 'Tell me the features you would like from: Romantic, busy, long_time, children,' \
+        self.message = 'Please choose features from: Romantic, busy, long_time, children,' \
                        ' large_group or late?'
         self.preferences = preferences_user
         self.tag = 'add_extra_features'
