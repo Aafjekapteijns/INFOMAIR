@@ -1,39 +1,10 @@
-import matplotlib.pyplot as plt
 import numpy as np
-import math
 from utils import split_data, get_bow, get_word_freq
 from baselines import BaselineRuleBased
 from ML_algorithms import train_decision_tree, train_gaussian_nb, train_multinomial_nb, train_logistic_regressor,\
     train_sktree, print_results
 from dialog_system import DialogSystem
-import pandas as pd
 
-# Loading the data for the dialog acts and utterance contents
-'''dialog_acts = open("dialog_acts.dat", 'r')
-
-# Read in data, convert to lowercase strings
-dialog_list = []
-for line in dialog_acts:
-    line = line.strip()
-    line = line.lower()
-    act = line.split(' ')[0]
-    cont = line[(len(act) + 1):]
-    dialog_list.append([act, cont])
-
-dialog_acts = np.array(dialog_list)
-
-print(dialog_acts)
-
-X_train, X_test, y_train, y_test = split_data(dialog_acts)
-
-baseline_2 = BaselineRuleBased(y_train)
-
-frequent_words = get_word_freq(X_train)
-
-vect_X_train = get_bow(X_train, frequent_words)
-vect_X_test = get_bow(X_test, frequent_words)
-
-'''
 
 if __name__ == '__main__':
     dialog_acts = open("dialog_acts.dat", 'r')

@@ -21,32 +21,6 @@ def split_data(data):
     return X_train, X_test, y_train, y_test
 
 
-def reasoning(list_in):
-    list_update = list_in
-    list_copy = []
-    while list_update != list_copy:
-        list_copy = list_update.copy()
-        if 'spanish' in list_in and 'long time' not in list_in:
-            list_update.append('long time')
-        if 'cheap' in list_in and 'not romantic' not in list_in:
-            list_update.append('not romantic')
-        if 'expensive' in list_in and 'romantic' not in list_in:
-            list_update.append('romantic')
-        if 'expensive' in list_in and 'good food' not in list_in:
-            list_update.append('good food')
-        if 'centre' in list_in and 'busy' not in list_in:
-            list_update.append('busy')
-        if 'busy' in list_in and 'late' not in list_in:
-            list_update.append('late')
-        if 'long time' in list_in and 'late' not in list_in:
-            list_update.append('late')
-        if 'cheap' in list_in and 'good food' in list_in and 'busy' not in list_in:
-            list_update.append('busy')
-        if 'gastropub' in list_in and 'not children' not in list_in:
-            list_update.append('not children')
-    return list_update
-
-
 def get_word_freq(contents):
     wordfreq = {}
     for content in contents:

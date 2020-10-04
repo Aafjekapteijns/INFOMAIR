@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 def update(list_update, attr, new_weight):
     """This function updates the confidence weight of an attribute, or adds it to the list if it is new"""
     name_list = [pair[0] for pair in list_update]
@@ -50,6 +51,7 @@ def inference(list):
         if 'gastropub' in attr_list:
             list_update = update(list_update, 'children', -0.85)
     return list_update
+
 
 def goaltext(goal):
     """This function assigns specific text to certain properties so it can be presented to the user"""

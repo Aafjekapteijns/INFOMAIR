@@ -18,7 +18,9 @@ class State:
 
     def get_next_state(self, intent, preferences_user, df):
         """This function is a generic function for all the states to change state, it depends on the features of every
-        class inheriting from State."""
+        class inheriting from State. This is the most important function, as it decides which state is the next one and
+        what data is needed there, also the order of the cases is justified and helps to follow the flow defined in
+        the diagram."""
         new_state = None
         if df is None:
             df = []
@@ -231,6 +233,7 @@ class RequestMoreInfo(State):
 
 
 class ShowMultiple(State):
+    """Class created to help to show results when there are multiple matches"""
     def __init__(self, preferences_user, df):
         self.states_dict = {'ChangePreferences': ['affirm'],
                             'repeat': ['null'],
@@ -253,6 +256,7 @@ class ShowMultiple(State):
 
 
 class Alternatives(State):
+    """Class created to help include alternatives to the search when it is needed"""
     def __init__(self, preferences_user):
         self.states_dict = {'ShowMultiple': ['affirm'],
                             'repeat': ['null'],
@@ -263,6 +267,7 @@ class Alternatives(State):
 
 
 class ExtraFeatures(State):
+    """Class created to determine if the user wants extra features or not, those are defined by the rules"""
     def __init__(self, preferences_user):
         self.states_dict = {'AddExtrafeatures': ['affirm'],
                             'repeat': ['null'],
@@ -274,6 +279,7 @@ class ExtraFeatures(State):
 
 
 class AddExtraFeatures(State):
+    """Class created to add extra features to the search of restaurants"""
     def __init__(self, preferences_user):
         self.states_dict = {'ShowMultiple': ['affirm', 'negate', 'inform', 'null']}
         self.message = 'Tell me the features you would like from: Romantic, busy, long_time, children,' \
@@ -305,7 +311,8 @@ class DialogSystem:
                           food: str = None, phone: str = None, addr: str = None, postcode: str = None,
                           romantic=False, busy=False, late=False, large_groups=False, children=False,
                           long_time=False):
-        """This function gets the restaurants available in the database with the user preferences"""
+        """This function gets the restaurants available in the database with the user preferences, if alternatives
+        are selected, it also finds restaurants with similar features as the user preferences."""
         dataframe = self.data
         if self.state.tag == 'alternatives':
             if pricerange is not None and pricerange != 'all':
