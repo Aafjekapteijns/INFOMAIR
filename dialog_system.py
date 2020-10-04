@@ -11,10 +11,13 @@ class State:
     message: {}
     preferences: {}
     tag: str
+    counter: int
+    df: pd.DataFrame
 
     def get_next_state(self, intent, preferences_user, df):
         """This function is a generic function for all the states to change state, it depends on the features of every
         class inheriting from State."""
+        new_state = None
         if df is None:
             df = []
         next_state = None
@@ -22,36 +25,47 @@ class State:
             if intent in val:
                 next_state = key
         print(next_state)
+
         if next_state == 'End':
             exit(code=0)
+        elif self.tag == 'ShowMultiple' and next_state == 'ShowMultiple':
+            self.counter += 1
+            preferences_user['restaurantname'] = self.df['restaurantname'].to_numpy()[self.counter]
+            self.__print_dataframe(self.df, '1', self.counter)
+            new_state = self
+        elif next_state == 'ShowMultiple':
+            self.__print_dataframe(df, '1', 0)
+            preferences_user['restaurantname'] = df['restaurantname'].to_numpy()[0]
+            new_state = ShowMultiple(preferences_user, df)
         elif next_state == 'Welcome':
-            return Welcome(preferences_user)
+            new_state = Welcome(preferences_user)
         elif next_state == 'repeat':
             print('Can you repeat please?')
-            return self
+            new_state = self
         elif next_state == 'Finish':
-            return Finish(preferences_user)
-        elif self.tag == 'welcome' and next_state == 'Preferences':
-            return Preferences(preferences_user)
-        elif next_state == 'ChangePreferences':
-            self.__print_dataframe(df,'N')
-            ChangePreferences(preferences_user)
+            new_state = Finish(preferences_user)
         elif next_state == 'RequestMore':
             if preferences_user['request'] == 'phone':
                 self.__print_dataframe(df, 'P')
             elif preferences_user['request'] == 'address':
                 self.__print_dataframe(df, 'A')
-            return RequestMore(preferences_user)
+            new_state = RequestMore(preferences_user)
         elif len(df) <= 1:
             if len(df) == 0:
                 print('I am sorry, we have no coincidences')
             else:
                 self.__print_dataframe(df,'N')
-            return ChangePreferences(preferences_user)
+            new_state = ChangePreferences(preferences_user)
+        elif self.tag == 'welcome' and next_state == 'Preferences':
+            new_state = Preferences(preferences_user)
+        elif next_state == 'ChangePreferences':
+            new_state = ChangePreferences(preferences_user)
         elif next_state == 'Preferences':
-            return Preferences(preferences_user)
+            new_state = Preferences(preferences_user)
         else:
-            return Repeat(preferences_user)
+            new_state = Repeat(preferences_user)
+
+        return new_state, preferences_user
 
     def assure_entities(self, entities):
         """This class is made to assure the preferences of the user, currently not used but will be possible to
@@ -79,7 +93,7 @@ class State:
                     assured_entities[category] = entity
         return assured_entities
 
-    def __print_dataframe(self, df, field):
+    def __print_dataframe(self, df, field, row=0):
         with pd.option_context('display.max_rows', None, 'display.max_columns',
                                None):  # more options can be specified also
             if field == 'N':
@@ -89,7 +103,8 @@ class State:
                 print(df['phone'].to_csv(index=False))
             elif field == 'A':
                 print(df['addr'].to_csv(index=False))
-
+            elif field == '1':
+                print(df['restaurantname'].to_numpy()[row])
 
     def print_message(self):
         """This function prints the message of every class"""
@@ -99,7 +114,8 @@ class State:
 class Welcome(State):
     """State to welcome and initiate the conversation, most of the time it will advance to preferences"""
     def __init__(self, preferences_user):
-        self.states_dict = {'Preferences': ['inform', 'hello'], 'repeat': ['null']}
+        self.states_dict = {'Preferences': ['inform', 'hello'],
+                            'repeat': ['null']}
         self.message = 'Hello, how can I help you?'
         self.preferences = preferences_user
         self.tag = 'welcome'
@@ -110,12 +126,15 @@ class Preferences(State):
     a restaurant. It has various messages in case some preferences are missing, in order to create a more accurate
     search"""
     def __init__(self, preferences_user):
-        self.states_dict = {'Preferences': ['inform'], 'repeat': ['null']}
+        self.states_dict = {'Preferences': ['inform', 'negate'],
+                            'ShowMultiple': ['affirm'],
+                            'repeat': ['null'],
+                            'RequestMore': ['request']}
         self.message = {'first' : 'Can you tell me what you are looking for?',
                         'missing_price' : 'What price range are you looking for? [cheap, moderate or expensive]',
                         'missing_location': 'Where do you want to find a restaurant?',
                         'missing_food': 'What type of food would you like?',
-                        'finish': 'Thank you, we will show you the options'}
+                        'finish': 'Thank you, we found at least an option, would you like to see it?'}
         self.preferences = preferences_user
         self.tag = 'preferences'
 
@@ -136,14 +155,16 @@ class Preferences(State):
                 self.preferences['postcode'] = 'all'
             else:
                 print(self.message['finish'])
-                self.states_dict = {'ChangePreferences': ['inform']}
 
 
 class ChangePreferences(State):
     """This State Class is used when all the preferences have been used but the user wants to change some of them in
     order to find a different restaurant from the offered ones"""
     def __init__(self, preferences_user):
-        self.states_dict = {'Preferences': ['inform', 'affirm'], 'Finish': ['negate'], 'repeat': ['null']}
+        self.states_dict = {'Preferences': ['inform', 'affirm'],
+                            'Finish': ['negate'],
+                            'repeat': ['null'],
+                            'RequestMore': ['request']}
         self.message = 'Do you want to change any preference? If yes tell me, or else say no'
         self.preferences = preferences_user
         self.tag = 'change_preferences'
@@ -183,6 +204,27 @@ class RequestMore(State):
         self.tag = 'request_more'
 
 
+class ShowMultiple(State):
+    def __init__(self, preferences_user, df):
+        self.states_dict = {'ChangePreferences': ['negate', 'affirm'],
+                            'repeat': ['null'],
+                            'ShowMultiple': ['reqmore'],
+                            'RequestMore': ['request']}
+        self.message = {'more': 'Here is one, type more for another option',
+                        'last': 'This is the last one, do you need anything else?'}
+        self.counter = 0
+        self.df = df
+        self.preferences = preferences_user
+        self.tag = 'ShowMultiple'
+
+    def print_message(self):
+        """ShowMultiple has a custom print message function in order to handle multiple options"""
+        if self.counter < len(self.df)-1:
+            print(self.message['more'])
+        else:
+            print(self.message['last'])
+
+
 class DialogSystem:
     """
     This class models a complete dialog system for the restaurant chatbot, it has states to which it transitions to
@@ -216,7 +258,6 @@ class DialogSystem:
         if addr is not None and addr != 'all':
             dataframe = dataframe[dataframe['addr'] == addr]
         if postcode is not None and postcode != 'all':
-            print(postcode)
             dataframe = dataframe[dataframe['postcode'] == postcode]
         return dataframe
 
@@ -238,11 +279,12 @@ class DialogSystem:
                     entities[key] = word
         return entities
 
-    def __transition(self, new_state: State):
+    def __transition(self, new_state: State, preferences):
         """This function makes a transition between states of the flow"""
         if new_state.tag == 'welcome':
             self.preferences = {}
         self.state = new_state
+        self.preferences = preferences
 
     def __get_intent(self, sentence: str):
         """This function gets the intent of a given sentence"""
@@ -251,7 +293,6 @@ class DialogSystem:
 
     def __update_preferences(self, entities: {}):
         """This function updates the preferences of the user with new given entities"""
-        print(entities)
         for key, value in entities.items():
             self.preferences[key] = value
 
@@ -266,12 +307,13 @@ class DialogSystem:
         self.__update_preferences(entities)
         df = None
         if self.preferences != {}:
-            #self.entities = self.state.assure_entities(entities)
-            df = self.__get_restaurants(pricerange=self.preferences.get('pricerange', None),
+            df = self.__get_restaurants(restaurantname=self.preferences.get('restaurantname',None),
+                                        pricerange=self.preferences.get('pricerange', None),
                                         area=self.preferences.get('area', None),
                                         food=self.preferences.get('food', None),
                                         postcode=self.preferences.get('postcode', None))
-        self.__transition(self.state.get_next_state(intent, self.preferences, df))
+        state, preferences = self.state.get_next_state(intent, self.preferences, df)
+        self.__transition(state, preferences)
 
         return intent
 
