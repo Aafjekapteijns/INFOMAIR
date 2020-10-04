@@ -102,4 +102,5 @@ def rest_inf():
                 rests.iloc[i, 11] = item[1]
             elif item[0] == 'large groups':
                 rests.iloc[i, 7] = item[1]
+    return rests
 
