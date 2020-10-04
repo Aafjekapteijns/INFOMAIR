@@ -14,4 +14,6 @@
   
  ## Use
  To run our code it is necessary to install the requirements, `````pip install -r requirements.txt````` . After that run
- the main.py file with python 3.7
+ the main.py file with python 3.7.
+ For a fast running comment out the training of decision_tree, as it trains for a long time. This also requires removing decision_tree 
+ from model list and the consequences while selecting the model, as there will no longer be number 4.

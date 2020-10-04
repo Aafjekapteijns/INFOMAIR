@@ -50,16 +50,16 @@ if __name__ == '__main__':
     y_pred = decision_tree.predict(vect_X_test)
     print_results(y_test, y_pred)
 
-    model_list = [sktree, decision_tree, logistic_regressor, gaussion_nb, multinomial_nb]
+    model_list = [sktree,  multinomial_nb, logistic_regressor, gaussion_nb, decision_tree]
 
     ds = DialogSystem('restaurants_info.csv', sktree, frequent_words, 'similarities.json')
 
     print('Type:\n'
           ' - 0 for SK Tree\n'
           ' - 1 for Logistic Regressor\n'
-          ' - 2 for Custom decision tree\n'
+          ' - 2 for Multinomial Naive Bayes\n'
           ' - 3 for Gaussian Naive Bayes\n'
-          ' - 4 for Multinomial Naive Bayes\n'
+          ' - 4 for Custom decision tree\n'
           ' - 5 for Baseline\n')
 
     model = int(input())
