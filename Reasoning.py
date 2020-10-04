@@ -1,12 +1,11 @@
-romantic, long_time, good_food, busy, unfamiliar, quiet, late, children = 0,0,0,0,0,0,0,0
-
 #   checks if the confidence of an attribute needs to be updated according to an inference rule: if the attribute
 #   does not have a value yet or has a value lower than the new confidence, the confidence of the attribute is updated
 def update(list_update, attr, new_weight):
     name_list = [pair[0] for pair in list_update]
     if attr in name_list:
         pos = name_list.index(attr)
-        list_update[pos][1] = max(abs(list_update[pos][1]), abs(new_weight))
+        if abs(new_weight) > abs(list_update[pos][1]):
+            list_update[pos][1] = new_weight
     else: list_update.append([attr, new_weight])
     return list_update
 
@@ -45,13 +44,12 @@ def reasoning(list, goal):
         elif goal == 'late':
             return 'open until late'
         elif goal == 'children':
-            return 'suitable for bringing children'
+            return 'suitable for children'
 
-    print(list_update)
     if goal in attr_list:
         goal_score = list_update[attr_list.index(goal)][1]
         if goal_score > 0.5:
-            print('This restaurant is probably ', goaltext(goal))
+            print('This restaurant is probably', goaltext(goal))
         elif goal_score > 0:
             print('This restaurant might be', goaltext(goal))
         elif goal_score < -0.5:
@@ -60,9 +58,4 @@ def reasoning(list, goal):
             print('This restaurant might not be', goaltext(goal))
     else: print('I do not know whether this restaurant is', goaltext(goal))
 
-#test_list = [['test1', 1], ['test2', 2], ['test3', 3]]
-#test_attr = 'test4'
-#test_weight = 4
-#print(update(test_list, test_attr, 4))
-
-reasoning(['cheap', 'spanish'], 'late')
+reasoning(['gastropub'], 'children')
