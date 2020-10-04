@@ -1,6 +1,7 @@
 import pandas as pd
 from utils import get_bow_unpacked
 import json
+from Reasoning import rest_inf2
 
 
 class State:
@@ -25,7 +26,7 @@ class State:
         for key, val in self.states_dict.items():
             if intent in val:
                 next_state = key
-        print(next_state)
+        # print(next_state)
 
         if next_state == 'End':
             exit(code=0)
@@ -34,15 +35,19 @@ class State:
             preferences_user['restaurantname'] = self.df['restaurantname'].to_numpy()[self.counter]
             self.__print_dataframe(self.df, '1', self.counter)
             new_state = self
-        elif next_state == 'ShowMultiple':
-            self.__print_dataframe(df, 'N')
-            self.__print_dataframe(df, '1', 0)
-            preferences_user['restaurantname'] = df['restaurantname'].to_numpy()[0]
-            new_state = ShowMultiple(preferences_user, df)
+        elif next_state == 'ExtraFeatures':
+            new_state = ExtraFeatures(preferences_user)
+            if self.tag == 'Alternatives':
+                new_state.tag = 'Alternatives'
+        elif next_state == 'AddExtrafeatures':
+            new_state = AddExtraFeatures(preferences_user)
+            if self.tag == 'Alternatives':
+                new_state.tag = 'Alternatives'
         elif next_state == 'Alternatives':
             new_state = Alternatives(preferences_user)
         elif next_state == 'Welcome':
-            new_state = Welcome(preferences_user)
+            new_state = Welcome({})
+            preferences_user = {}
         elif next_state == 'repeat':
             print('Can you repeat please?')
             new_state = self
@@ -60,12 +65,22 @@ class State:
             new_state = ChangePreferences(preferences_user)
         elif len(df) <= 1:
             if len(df) == 0:
-                print('I am sorry, we have no coincidences')
+                print('I am sorry, we have no matches')
+                preferences_user['romantic'] = False
+                preferences_user['late'] = False
+                preferences_user['busy'] = False
+                preferences_user['children'] = False
+                preferences_user['large_group'] = False
+                preferences_user['long_time'] = False
             else:
                 if preferences_user['restaurantname'] is not None:
                     preferences_user['restaurantname'] = None
                 self.__print_dataframe(df,'N')
             new_state = ChangePreferences(preferences_user)
+        elif next_state == 'ShowMultiple':
+            self.__print_dataframe(df, '1', 0)
+            preferences_user['restaurantname'] = df['restaurantname'].to_numpy()[0]
+            new_state = ShowMultiple(preferences_user, df)
         elif self.tag == 'welcome' and next_state == 'Preferences':
             new_state = Preferences(preferences_user)
 
@@ -136,14 +151,14 @@ class Preferences(State):
     search"""
     def __init__(self, preferences_user):
         self.states_dict = {'Preferences': ['inform', 'negate'],
-                            'ShowMultiple': ['affirm'],
+                            'ExtraFeatures': ['affirm'],
                             'repeat': ['null'],
                             'RequestMore': ['request']}
         self.message = {'first' : 'Can you tell me what you are looking for?',
                         'missing_price' : 'What price range are you looking for? [cheap, moderate or expensive]',
                         'missing_location': 'Where do you want to find a restaurant?',
                         'missing_food': 'What type of food would you like?',
-                        'finish': 'Thank you, we found at least an option, would you like to see it?'}
+                        'finish': 'Thank you, we found at least one option, would you like to see it?'}
         self.preferences = preferences_user
         self.tag = 'preferences'
 
@@ -174,8 +189,9 @@ class ChangePreferences(State):
                             'Finish': ['negate'],
                             'repeat': ['null'],
                             'RequestMore': ['request'],
-                            'Alternatives': ['reqalts']}
-        self.message = 'Do you want to change any preference or alternative results? If yes tell me, or else say no'
+                            'ExtraFeatures': ['reqalts']}
+        self.message = 'Do you want to change any preference or alternative results (type other)?' \
+                       ' If yes tell me, or else say no'
         self.preferences = preferences_user
         self.tag = 'change_preferences'
 
@@ -186,7 +202,7 @@ class Repeat(State):
     def __init__(self, preferences_user):
         self.states_dict = {'Preferences': ['inform'], 'repeat': []}
         self.message = 'Can you repeat?'
-        self.preferences =preferences_user
+        self.preferences = preferences_user
         self.tag = 'repeat'
 
 
@@ -246,6 +262,26 @@ class Alternatives(State):
         self.tag = 'alternatives'
 
 
+class ExtraFeatures(State):
+    def __init__(self, preferences_user):
+        self.states_dict = {'AddExtrafeatures': ['affirm'],
+                            'repeat': ['null'],
+                            'ShowMultiple': ['negate']}
+        self.message = 'Would you like to include extra features like Romantic, busy, long_time, children,' \
+                       ' large_group or late?'
+        self.preferences = preferences_user
+        self.tag = 'extra_features'
+
+
+class AddExtraFeatures(State):
+    def __init__(self, preferences_user):
+        self.states_dict = {'ShowMultiple': ['affirm', 'negate', 'inform', 'null']}
+        self.message = 'Tell me the features you would like from: Romantic, busy, long_time, children,' \
+                       ' large_group or late?'
+        self.preferences = preferences_user
+        self.tag = 'add_extra_features'
+
+
 class DialogSystem:
     """
     This class models a complete dialog system for the restaurant chatbot, it has states to which it transitions to
@@ -255,17 +291,20 @@ class DialogSystem:
 
     def __init__(self, restaurant_data: str, ml_model, frequent_words, similarities_file):
         self.state = Welcome({})
-        self.data = pd.read_csv(restaurant_data)
+        self.data = rest_inf2(pd.read_csv(restaurant_data))
         self.ml_model = ml_model
         self.entities = {}
         self.__get_unique_entities()
         self.frequent_words = frequent_words
         self.preferences = {}
+        self.extra_preferences = ['romantic',  'busy', 'late', 'large_groups', 'children', 'long_time']
         with open(similarities_file) as json_file:
             self.similarities = json.load(json_file)
 
     def __get_restaurants(self, restaurantname: str = None, pricerange: str = None, area: str = None,
-                          food: str = None, phone: str = None, addr: str = None, postcode: str = None):
+                          food: str = None, phone: str = None, addr: str = None, postcode: str = None,
+                          romantic=False, busy=False, late=False, large_groups=False, children=False,
+                          long_time=False):
         """This function gets the restaurants available in the database with the user preferences"""
         dataframe = self.data
         if self.state.tag == 'alternatives':
@@ -308,6 +347,18 @@ class DialogSystem:
                 dataframe = dataframe[dataframe['addr'] == addr]
             if postcode is not None and postcode != 'all':
                 dataframe = dataframe[dataframe['postcode'] == postcode]
+        if romantic:
+            dataframe = dataframe[dataframe['romantic'] > 0]
+        if late is True:
+            dataframe = dataframe[dataframe['late'] > 0]
+        if children is True:
+            dataframe = dataframe[dataframe['children'] > 0]
+        if busy is True:
+            dataframe = dataframe[dataframe['busy'] > 0]
+        if large_groups is True:
+            dataframe = dataframe[dataframe['large_groups'] > 0]
+        if long_time is True:
+            dataframe = dataframe[dataframe['long_time'] > 0]
         return dataframe
 
     def __get_unique_entities(self):
@@ -326,6 +377,9 @@ class DialogSystem:
             for key, value in self.entities_options.items():
                 if word in value:
                     entities[key] = word
+            for key in self.extra_preferences:
+                if word == key:
+                    entities[key] = True
         return entities
 
     def __transition(self, new_state: State, preferences):
@@ -360,7 +414,14 @@ class DialogSystem:
                                         pricerange=self.preferences.get('pricerange', None),
                                         area=self.preferences.get('area', None),
                                         food=self.preferences.get('food', None),
-                                        postcode=self.preferences.get('postcode', None))
+                                        postcode=self.preferences.get('postcode', None),
+                                        romantic=self.preferences.get('romantic', None),
+                                        busy=self.preferences.get('busy', None),
+                                        late=self.preferences.get('late', None),
+                                        children=self.preferences.get('children', None),
+                                        long_time=self.preferences.get('long_time', None),
+                                        large_groups=self.preferences.get('large_groups', None))
+
         state, preferences = self.state.get_next_state(intent, self.preferences, df)
         self.__transition(state, preferences)
 

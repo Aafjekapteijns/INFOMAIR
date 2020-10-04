@@ -33,59 +33,7 @@ frequent_words = get_word_freq(X_train)
 vect_X_train = get_bow(X_train, frequent_words)
 vect_X_test = get_bow(X_test, frequent_words)
 
-sktree = train_sktree(vect_X_train, y_train)
-y_pred = sktree.predict(vect_X_test)
-print_results(y_test, y_pred)
-
-logistic_regressor = train_logistic_regresor(vect_X_train, y_train)
-y_pred = logistic_regressor.predict(vect_X_test)
-print_results(y_test, y_pred)
-
-gaussion_nb = train_gaussian_nb(vect_X_train, y_train)
-y_pred = gaussion_nb.predict(vect_X_test)
-print_results(y_test, y_pred)
-
-multinomial_nb = train_multinomial_nb(vect_X_train, y_train)
-y_pred = multinomial_nb.predict(vect_X_test)
-print_results(y_test, y_pred)
-
-#decision_tree = train_decision_tree(vect_X_train, y_train)
-#y_pred = decision_tree.predict(vect_X_test)
-#print_results(y_test, y_pred)
-
-
-model_list = [sktree, logistic_regressor, gaussion_nb, multinomial_nb]
-
-if __name__ == '__main__':
-
-    print('Type:\n'
-          ' - 0 for SK Tree\n'
-          ' - 1 for Logistic Regressor\n'
-          ' - 2 for Custom decision tree\n'
-          ' - 3 for Gaussian Naive Bayes\n'
-          ' - 4 for Multinomial Naive Bayes\n'
-          ' - 5 for Baseline\n')
-
-    model = int(input())
-
-    if model == 5:
-        while True:
-            print('type an utterance or exit to exit')
-            input_text = str(input()).lower()
-            if input_text == 'exit':
-                break
-            else:
-                print(baseline_2.predict(input_text))
-    else:
-        while True:
-            print('type an utterance or exit to exit')
-            input_text = str(input()).lower()
-            if input_text == 'exit':
-                break
-            else:
-                input_text = input_text.split(' ')
-                input_vector = get_bow_unpacked(input_text, frequent_words)
-                print(model_list[model].predict(input_vector))'''
+'''
 
 if __name__ == '__main__':
     dialog_acts = open("dialog_acts.dat", 'r')
@@ -115,15 +63,51 @@ if __name__ == '__main__':
     y_pred = sktree.predict(vect_X_test)
     print_results(y_test, y_pred)
 
+    logistic_regressor = train_logistic_regressor(vect_X_train, y_train)
+    y_pred = logistic_regressor.predict(vect_X_test)
+    print_results(y_test, y_pred)
+
+    gaussion_nb = train_gaussian_nb(vect_X_train, y_train)
+    y_pred = gaussion_nb.predict(vect_X_test)
+    print_results(y_test, y_pred)
+
+    multinomial_nb = train_multinomial_nb(vect_X_train, y_train)
+    y_pred = multinomial_nb.predict(vect_X_test)
+    print_results(y_test, y_pred)
+
+    decision_tree = train_decision_tree(vect_X_train, y_train)
+    y_pred = decision_tree.predict(vect_X_test)
+    print_results(y_test, y_pred)
+
+    model_list = [sktree, decision_tree, logistic_regressor, gaussion_nb, multinomial_nb]
+
     ds = DialogSystem('restaurants_info.csv', sktree, frequent_words, 'similarities.json')
 
-    while True:
-        ds.get_message()
-        input_text = str(input()).lower()
-        if input_text == 'exit':
-            break
-        else:
-            intent = ds.process_sentence(input_text)
-            print(intent)
+    print('Type:\n'
+          ' - 0 for SK Tree\n'
+          ' - 1 for Logistic Regressor\n'
+          ' - 2 for Custom decision tree\n'
+          ' - 3 for Gaussian Naive Bayes\n'
+          ' - 4 for Multinomial Naive Bayes\n'
+          ' - 5 for Baseline\n')
 
+    model = int(input())
 
+    if model == 5:
+        while True:
+            print('type an utterance or exit to exit')
+            input_text = str(input()).lower()
+            if input_text == 'exit':
+                break
+            else:
+                print(baseline_2.predict(input_text))
+    else:
+        ds = DialogSystem('restaurants_info.csv', model_list[model], frequent_words, 'similarities.json')
+        while True:
+            ds.get_message()
+            input_text = str(input()).lower()
+            if input_text == 'exit':
+                break
+            else:
+                intent = ds.process_sentence(input_text)
+                # print(intent)

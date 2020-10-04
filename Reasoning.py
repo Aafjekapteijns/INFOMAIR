@@ -23,9 +23,9 @@ def inference(list):
         if 'cheap' in attr_list and 'good food' in attr_list:
             list_update = update(list_update, 'busy', 0.8)
         if 'spanish' in attr_list:
-            list_update = update(list_update, 'long time', 0.7)
+            list_update = update(list_update, 'long_time', 0.7)
         if 'busy' in attr_list:
-            list_update = update(list_update, 'long time', 0.6)
+            list_update = update(list_update, 'long_time', 0.6)
         if 'long time' in attr_list:
             list_update = update(list_update, 'children', -0.7)
         if 'busy' in attr_list:
@@ -38,12 +38,12 @@ def inference(list):
         if 'expensive' in attr_list:
             list_update = update(list_update, 'romantic', 0.8)
         if 'busy' in attr_list:
-            list_update = update(list_update, 'large groups', -0.65)
+            list_update = update(list_update, 'large_groups', -0.65)
         if 'centre' in attr_list:
             list_update = update(list_update, 'busy', 0.6)
         if 'busy' in attr_list:
-            list_update = update(list_update, 'long time', 0.75)
-        if 'long time' in attr_list:
+            list_update = update(list_update, 'long_time', 0.75)
+        if 'long_time' in attr_list:
             list_update = update(list_update, 'late', 0.7)
         if 'cheap' in attr_list:
             list_update = update(list_update, 'busy', 0.75)
@@ -53,7 +53,7 @@ def inference(list):
 
 def goaltext(goal):
     """This function assigns specific text to certain properties so it can be presented to the user"""
-    if goal == 'long time':
+    if goal == 'long_time':
         return 'suitable for spending a long time'
     elif goal == 'large groups':
         return 'suitable for large groups'
@@ -81,18 +81,18 @@ else:
 def rest_inf():
     rests = pd.read_csv('restaurants_info.csv')
     rests["busy"] = 0
-    rests["long time"] = 0
+    rests["long_time"] = 0
     rests["late"] = 0
     rests["romantic"] = 0
     rests["children"] = 0
-    rests["large groups"] = 0
+    rests["large_groups"] = 0
     for i in range(len(rests)):
         attrs = rests.iloc[i, 1:4].tolist()
         attrs_up = inference(attrs)
         for item in attrs_up:
             if item[0] == 'busy':
                 rests.iloc[i, 7] = item[1]
-            elif item[0] == 'long time':
+            elif item[0] == 'long_time':
                 rests.iloc[i, 8] = item[1]
             elif item[0] == 'late':
                 rests.iloc[i, 9] = item[1]
@@ -100,7 +100,32 @@ def rest_inf():
                 rests.iloc[i, 10] = item[1]
             elif item[0] == 'children':
                 rests.iloc[i, 11] = item[1]
-            elif item[0] == 'large groups':
+            elif item[0] == 'large_groups':
                 rests.iloc[i, 7] = item[1]
     return rests
 
+
+def rest_inf2(rests):
+    rests["busy"] = 0
+    rests["long_time"] = 0
+    rests["late"] = 0
+    rests["romantic"] = 0
+    rests["children"] = 0
+    rests["large_groups"] = 0
+    for i in range(len(rests)):
+        attrs = rests.iloc[i, 1:4].tolist()
+        attrs_up = inference(attrs)
+        for item in attrs_up:
+            if item[0] == 'busy':
+                rests.iloc[i, 7] = item[1]
+            elif item[0] == 'long_time':
+                rests.iloc[i, 8] = item[1]
+            elif item[0] == 'late':
+                rests.iloc[i, 9] = item[1]
+            elif item[0] == 'romantic':
+                rests.iloc[i, 10] = item[1]
+            elif item[0] == 'children':
+                rests.iloc[i, 11] = item[1]
+            elif item[0] == 'large_groups':
+                rests.iloc[i, 7] = item[1]
+    return rests
