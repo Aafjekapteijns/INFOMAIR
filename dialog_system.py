@@ -45,7 +45,7 @@ class State:
         elif next_state == 'Finish':
             new_state = Finish(preferences_user)
         elif next_state == 'RequestMore':
-            if preferences_user['request'] == 'phone':
+            if preferences_user['request'] in ['phone', 'telephone', 'number']:
                 self.__print_dataframe(df, 'P')
             elif preferences_user['request'] == 'address':
                 self.__print_dataframe(df, 'A')
@@ -267,7 +267,7 @@ class DialogSystem:
         field_dict = {}
         for field in field_list:
             field_dict[field] = self.data[field].unique()
-        field_dict['request'] = ['phone', 'address']
+        field_dict['request'] = ['phone', 'telephone', 'number', 'address']
         self.entities_options = field_dict
 
     def __get_entities(self, sentence: str):
