@@ -31,11 +31,22 @@ class State:
             return self
         elif next_state == 'Finish':
             return Finish(preferences_user)
-        elif len(df) < 3:
-            with pd.option_context('display.max_rows', None, 'display.max_columns',
-                                   None):  # more options can be specified also
-                print('we only have this match for your preferences')
-                print(df)
+        elif self.tag == 'welcome' and next_state == 'Preferences':
+            return Preferences(preferences_user)
+        elif next_state == 'ChangePreferences':
+            self.__print_dataframe(df,'N')
+            ChangePreferences(preferences_user)
+        elif next_state == 'RequestMore':
+            if preferences_user['request'] == 'phone':
+                self.__print_dataframe(df, 'P')
+            elif preferences_user['request'] == 'address':
+                self.__print_dataframe(df, 'A')
+            return RequestMore(preferences_user)
+        elif len(df) <= 1:
+            if len(df) == 0:
+                print('I am sorry, we have no coincidences')
+            else:
+                self.__print_dataframe(df,'N')
             return ChangePreferences(preferences_user)
         elif next_state == 'Preferences':
             return Preferences(preferences_user)
@@ -68,6 +79,18 @@ class State:
                     assured_entities[category] = entity
         return assured_entities
 
+    def __print_dataframe(self, df, field):
+        with pd.option_context('display.max_rows', None, 'display.max_columns',
+                               None):  # more options can be specified also
+            if field == 'N':
+                print('we only have this match for your preferences')
+                print(df['restaurantname'].to_csv(index=False))
+            elif field == 'P':
+                print(df['phone'].to_csv(index=False))
+            elif field == 'A':
+                print(df['addr'].to_csv(index=False))
+
+
     def print_message(self):
         """This function prints the message of every class"""
         print(self.message)
@@ -87,12 +110,13 @@ class Preferences(State):
     a restaurant. It has various messages in case some preferences are missing, in order to create a more accurate
     search"""
     def __init__(self, preferences_user):
-        self.states_dict = {'Preferences': ['inform'],'repeat': ['null']}
+        self.states_dict = {'Preferences': ['inform'], 'repeat': ['null']}
         self.message = {'first' : 'Can you tell me what you are looking for?',
-                        'missing_price' : 'What price range are you looking for?',
+                        'missing_price' : 'What price range are you looking for? [cheap, moderate or expensive]',
                         'missing_location': 'Where do you want to find a restaurant?',
-                        'missing_food': 'What type of food would you like?'}
-        self.preferences =preferences_user
+                        'missing_food': 'What type of food would you like?',
+                        'finish': 'Thank you, we will show you the options'}
+        self.preferences = preferences_user
         self.tag = 'preferences'
 
     def print_message(self):
@@ -102,12 +126,17 @@ class Preferences(State):
         else:
             if 'pricerange' not in self.preferences.keys():
                 print(self.message['missing_price'])
+                self.preferences['pricerange'] = 'all'
             elif 'food' not in self.preferences.keys():
                 print(self.message['missing_food'])
+                self.preferences['food'] = 'all'
             elif 'area'not in self.preferences.keys() and 'postcode' not in self.preferences.keys():
                 print(self.message['missing_location'])
+                self.preferences['area'] = 'all'
+                self.preferences['postcode'] = 'all'
             else:
-                self.states_dict = {'Finish': ['inform']}
+                print(self.message['finish'])
+                self.states_dict = {'ChangePreferences': ['inform']}
 
 
 class ChangePreferences(State):
@@ -134,10 +163,24 @@ class Finish(State):
     """This State Class is used when the process of looking or a restaurant is finished, therefore we offer the user the
      possibility to look for a new restaurant or exit the program"""
     def __init__(self, preferences_user):
-        self.states_dict = {'Welcome': ['affirm'],  'End': ['negate'], 'repeat': ['null']}
+        self.states_dict = {'Welcome': ['affirm'],
+                            'End': ['negate', 'bye'],
+                            'repeat': ['null'],
+                            'RequestMore': ['request']}
         self.message = 'Thank you, do you need anything else?'
         self.preferences = preferences_user
         self.tag = 'finish'
+
+
+class RequestMore(State):
+    """This State Class is used when the user asks for the address or phone"""
+    def __init__(self, preferences_user):
+        self.states_dict = {'End': ['negate', 'bye'],
+                            'repeat': ['null'],
+                            'RequestMore': ['request']}
+        self.message = 'Here it is, anything else?'
+        self.preferences = preferences_user
+        self.tag = 'request_more'
 
 
 class DialogSystem:
@@ -160,19 +203,20 @@ class DialogSystem:
                           food: str = None, phone: str = None, addr: str = None, postcode: str = None):
         """This function gets the restaurants available in the database with the user preferences"""
         dataframe = self.data
-        if restaurantname is not None:
+        if restaurantname is not None and restaurantname != 'all':
             dataframe = dataframe[dataframe['restaurantname'] == restaurantname]
-        if pricerange is not None:
+        if pricerange is not None and pricerange != 'all':
             dataframe = dataframe[dataframe['pricerange'] == pricerange]
-        if area is not None:
+        if area is not None and area != 'all':
             dataframe = dataframe[dataframe['area'] == area]
-        if food is not None:
+        if food is not None and food != 'all':
             dataframe = dataframe[dataframe['food'] == food]
-        if phone is not None:
+        if phone is not None and phone != 'all':
             dataframe = dataframe[dataframe['phone'] == phone]
-        if addr is not None:
+        if addr is not None and addr != 'all':
             dataframe = dataframe[dataframe['addr'] == addr]
-        if postcode is not None:
+        if postcode is not None and postcode != 'all':
+            print(postcode)
             dataframe = dataframe[dataframe['postcode'] == postcode]
         return dataframe
 
@@ -182,6 +226,7 @@ class DialogSystem:
         field_dict = {}
         for field in field_list:
             field_dict[field] = self.data[field].unique()
+        field_dict['request'] = ['phone', 'address']
         self.entities_options = field_dict
 
     def __get_entities(self, sentence: str):

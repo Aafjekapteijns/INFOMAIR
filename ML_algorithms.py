@@ -6,7 +6,7 @@ from sklearn import tree, metrics
 import pandas as pd
 
 
-def train_logistic_regresor(x_train, y_train):
+def train_logistic_regressor(x_train, y_train):
     logistic_regr = LogisticRegression()
     logistic_regr.fit(x_train, y_train)
 

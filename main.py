@@ -3,7 +3,7 @@ import numpy as np
 import math
 from utils import split_data, get_bow, get_word_freq
 from baselines import BaselineRuleBased
-from ML_algorithms import train_decision_tree, train_gaussian_nb, train_multinomial_nb, train_logistic_regresor,\
+from ML_algorithms import train_decision_tree, train_gaussian_nb, train_multinomial_nb, train_logistic_regressor,\
     train_sktree, print_results
 from dialog_system import DialogSystem
 import pandas as pd

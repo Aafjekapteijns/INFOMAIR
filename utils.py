@@ -29,7 +29,7 @@ def reasoning(list_in):
         if 'spanish' in list_in and 'long time' not in list_in:
             list_update.append('long time')
         if 'cheap' in list_in and 'not romantic' not in list_in:
-           list_update.append('not romantic')
+            list_update.append('not romantic')
         if 'expensive' in list_in and 'romantic' not in list_in:
             list_update.append('romantic')
         if 'expensive' in list_in and 'good food' not in list_in:
