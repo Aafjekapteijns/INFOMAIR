@@ -406,12 +406,11 @@ class DialogSystem:
         for key, value in entities.items():
             self.preferences[key] = value
 
-    def process_sentence(self, sentence: str):
+    def process_sentence(self, sentence: [str]):
         """
         This function process the sentence running multiple of the previous functions in order to extract the
         entities, the intent and  update the user preferences. It creates a dataframe with the available restaurants and
         assures that the state transition is done."""
-        sentence = sentence.split(' ')
         intent = self.__get_intent(sentence)
         entities = self.__get_entities(sentence)
         self.__update_preferences(entities)

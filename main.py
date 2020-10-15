@@ -1,5 +1,5 @@
 import numpy as np
-from utils import split_data, get_bow, get_word_freq
+from utils import split_data, get_bow, get_word_freq, lev_sentence
 from baselines import BaselineRuleBased
 from ML_algorithms import train_decision_tree, train_gaussian_nb, train_multinomial_nb, train_logistic_regressor,\
     train_sktree, print_results
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     y_pred = sktree.predict(vect_X_test)
     print_results(y_test, y_pred)
 
-    logistic_regressor = train_logistic_regressor(vect_X_train, y_train)
+    """logistic_regressor = train_logistic_regressor(vect_X_train, y_train)
     y_pred = logistic_regressor.predict(vect_X_test)
     print_results(y_test, y_pred)
 
@@ -48,11 +48,10 @@ if __name__ == '__main__':
 
     decision_tree = train_decision_tree(vect_X_train, y_train)
     y_pred = decision_tree.predict(vect_X_test)
-    print_results(y_test, y_pred)
+    print_results(y_test, y_pred)"""
 
-    model_list = [sktree,  multinomial_nb, logistic_regressor, gaussion_nb, decision_tree]
+    """model_list = [sktree]
 
-    ds = DialogSystem('restaurants_info.csv', sktree, frequent_words, 'similarities.json')
 
     print('Type:\n'
           ' - 0 for SK Tree\n'
@@ -77,8 +76,34 @@ if __name__ == '__main__':
         while True:
             ds.get_message()
             input_text = str(input()).lower()
+            lev_sentence(input_text)
             if input_text == 'exit':
                 break
             else:
                 intent = ds.process_sentence(input_text)
-                # print(intent)
+                # print(intent)"""
+
+    ds = DialogSystem('restaurants_info.csv', sktree, frequent_words, 'similarities.json')
+
+    print("Do you want to use auto correction")
+    input_auto = str(input()).lower()
+
+    if input_auto == 'yes':
+        while True:
+            ds.get_message()
+            input_text = str(input()).lower()
+            input_text = lev_sentence(input_text)
+            if input_text == 'exit':
+                break
+            else:
+                intent = ds.process_sentence(input_text)
+
+    else:
+        while True:
+            ds.get_message()
+            input_text = str(input()).lower()
+            input_text = input_text.split(' ')
+            if input_text == 'exit':
+                break
+            else:
+                intent = ds.process_sentence(input_text)
