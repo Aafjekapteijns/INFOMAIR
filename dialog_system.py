@@ -28,7 +28,7 @@ class State:
         for key, val in self.states_dict.items():
             if intent in val:
                 next_state = key
-        # print(next_state)
+        #print(next_state)
 
         if next_state == 'End':
             exit(code=0)
@@ -37,14 +37,14 @@ class State:
             preferences_user['restaurantname'] = self.df['restaurantname'].to_numpy()[self.counter]
             self.__print_dataframe(self.df, '1', self.counter)
             new_state = self
-        elif next_state == 'ExtraFeatures':
-            new_state = ExtraFeatures(preferences_user)
-            if self.tag == 'Alternatives':
-                new_state.tag = 'Alternatives'
-        elif next_state == 'AddExtrafeatures':
-            new_state = AddExtraFeatures(preferences_user)
-            if self.tag == 'Alternatives':
-                new_state.tag = 'Alternatives'
+        #elif next_state == 'ExtraFeatures':
+        #    new_state = ExtraFeatures(preferences_user)
+        #    if self.tag == 'Alternatives':
+        #        new_state.tag = 'Alternatives'
+        #elif next_state == 'AddExtrafeatures':
+        #    new_state = AddExtraFeatures(preferences_user)
+        #    if self.tag == 'Alternatives':
+        #        new_state.tag = 'Alternatives'
         elif next_state == 'Alternatives':
             new_state = Alternatives(preferences_user)
         elif next_state == 'Welcome':
@@ -124,13 +124,13 @@ class State:
                                None):  # more options can be specified also
             if field == 'N':
                 print('we only have this match for your preferences')
-                print(df['restaurantname'].to_csv(index=False))
+                print(df[["restaurantname","pricerange","area","food"]].to_csv(index=False))
             elif field == 'P':
                 print(df['phone'].to_csv(index=False))
             elif field == 'A':
                 print(df['addr'].to_csv(index=False))
             elif field == '1':
-                print(df['restaurantname'].to_numpy()[row])
+                print(df[["restaurantname","pricerange","area","food"]].to_numpy()[row])
 
     def print_message(self):
         """This function prints the message of every class"""
@@ -153,7 +153,7 @@ class Preferences(State):
     search"""
     def __init__(self, preferences_user):
         self.states_dict = {'Preferences': ['inform', 'negate'],
-                            'ExtraFeatures': ['affirm'],
+                            'ShowMultiple': ['affirm'],
                             'repeat': ['null'],
                             'RequestMore': ['request']}
         self.message = {'first' : 'Can you tell me what you are looking for?',
@@ -190,8 +190,8 @@ class ChangePreferences(State):
         self.states_dict = {'Preferences': ['inform', 'affirm'],
                             'Finish': ['negate'],
                             'repeat': ['null'],
-                            'RequestMore': ['request'],
-                            'ExtraFeatures': ['reqalts']}
+                            'RequestMore': ['request']
+                            }
         self.message = 'Do you want to change any preference or alternative results (type other)?' \
                        ' If yes tell me, or else say no'
         self.preferences = preferences_user
@@ -266,7 +266,7 @@ class Alternatives(State):
         self.tag = 'alternatives'
 
 
-class ExtraFeatures(State):
+'''class ExtraFeatures(State):
     """Class created to determine if the user wants extra features or not, those are defined by the rules"""
     def __init__(self, preferences_user):
         self.states_dict = {'AddExtrafeatures': ['affirm'],
@@ -285,7 +285,7 @@ class AddExtraFeatures(State):
         self.message = 'Please choose features from: Romantic, busy, long_time, children,' \
                        ' large_group or late?'
         self.preferences = preferences_user
-        self.tag = 'add_extra_features'
+        self.tag = 'add_extra_features' '''
 
 
 class DialogSystem:
