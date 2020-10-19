@@ -31,7 +31,7 @@ class State:
         #print(next_state)
 
         if next_state == 'End':
-            exit(code=0)
+            new_state = Exit({})
         elif self.tag == 'ShowMultiple' and next_state == 'ShowMultiple':
             self.counter += 1
             preferences_user['restaurantname'] = self.df['restaurantname'].to_numpy()[self.counter]
@@ -75,7 +75,7 @@ class State:
                 preferences_user['large_group'] = False
                 preferences_user['long_time'] = False
             else:
-                if preferences_user['restaurantname'] is not None:
+                if preferences_user.get('restaurantname', None) is not None:
                     preferences_user['restaurantname'] = None
                 self.__print_dataframe(df,'N')
             new_state = ChangePreferences(preferences_user)
@@ -220,6 +220,13 @@ class Finish(State):
         self.preferences = preferences_user
         self.tag = 'finish'
 
+
+class Exit(State):
+    def __init__(self, preferences_user):
+        self.states_dict = {}
+        self.message = 'Exit'
+        self.preferences = preferences_user
+        self.tag = 'exit'
 
 class RequestMoreInfo(State):
     """This State Class is used when the user asks for the address or phone"""
@@ -427,9 +434,12 @@ class DialogSystem:
                                         children=self.preferences.get('children', None),
                                         long_time=self.preferences.get('long_time', None),
                                         large_groups=self.preferences.get('large_groups', None))
-
+        print(self.preferences)
         state, preferences = self.state.get_next_state(intent, self.preferences, df)
         self.__transition(state, preferences)
+
+        if state.tag == 'exit':
+            intent = "exit"
 
         return intent
 

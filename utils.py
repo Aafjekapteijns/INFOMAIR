@@ -10,7 +10,8 @@ words = ["expensive", "cheap", "moderate", "south", "north", "east","west","cent
          "french", "european", "bistro", "swiss", "gastropub", "traditional",
          "north american", "steakhouse", "british",
          "lebanese", "turkish", "persian", "want",
-         "international", "modern european", "fusion"]
+         "international", "modern european", "fusion",
+         "yes", "no"]
 
 
 def split_data(data):
@@ -103,7 +104,7 @@ def levenshteinDistanceDP(token1, token2):
     return distances[len(token1)][len(token2)]
 
 
-def lev_distance(word:str, numwords: int = 3):
+def lev_distance(word: str, numwords: int = 3):
     dictWordDist = []
     wordIdx = 0
 
@@ -129,8 +130,16 @@ def lev_distance(word:str, numwords: int = 3):
 
 
 def lev_sentence(sentence):
+    flag_cor = False
     sentence = sentence.split(' ')
     words_lev = []
     for word in sentence:
-        words_lev.append(lev_distance(word))
-    return words_lev
+        if len(word)<2:
+            words_lev.append(word)
+        else:
+            lev = lev_distance(word)
+            if lev != word:
+                flag_cor = True
+                print(lev, word)
+            words_lev.append(lev)
+    return words_lev, flag_cor

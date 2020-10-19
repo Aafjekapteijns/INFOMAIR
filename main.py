@@ -85,18 +85,26 @@ if __name__ == '__main__':
 
     ds = DialogSystem('restaurants_info.csv', sktree, frequent_words, 'similarities.json')
 
-    print("Do you want to use auto correction")
+    print("On/Off")
     input_auto = str(input()).lower()
 
-    if input_auto == 'yes':
+    rounds = 0
+    mistakes = 0
+
+    if input_auto == 'on':
         while True:
             ds.get_message()
             input_text = str(input()).lower()
-            input_text = lev_sentence(input_text)
+            input_text, flag = lev_sentence(input_text)
+            if flag:
+                mistakes += 1
             if input_text == 'exit':
                 break
             else:
+                rounds += 1
                 intent = ds.process_sentence(input_text)
+                if intent == 'exit':
+                    break
 
     else:
         while True:
@@ -106,4 +114,11 @@ if __name__ == '__main__':
             if input_text == 'exit':
                 break
             else:
+                rounds += 1
                 intent = ds.process_sentence(input_text)
+                if intent == 'exit':
+                    break
+
+    print('rounds: ' + str(rounds))
+    print('mistakes: ' + str(mistakes))
+
