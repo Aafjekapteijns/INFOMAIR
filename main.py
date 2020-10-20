@@ -120,5 +120,5 @@ if __name__ == '__main__':
                     break
 
     print('rounds: ' + str(rounds))
-    print('edits: Corrected words' + str(mistakes))
+    print('edits: ' + str(mistakes))
 

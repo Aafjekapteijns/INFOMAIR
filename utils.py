@@ -140,6 +140,6 @@ def lev_sentence(sentence):
             lev = lev_distance(word)
             if lev != word:
                 flag_cor = True
-                print(lev, word)
+                print('Changed {0} to {1}'.format(word, lev))
             words_lev.append(lev)
     return words_lev, flag_cor
